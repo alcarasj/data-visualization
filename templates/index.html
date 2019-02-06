@@ -8,8 +8,8 @@
 <div id="root" style="height: 100%; display: flex; align-items: center; justify-content: center;">
 </div>
 <script>
-  data = "{{ data|e }}";
-  datapointCount = data.length;
+  data = "{{ data }}"
+  console.log(data);
 
   //Make an SVG Container
   var svgContainer = d3.select("#root").append("svg")
@@ -19,7 +19,7 @@
   var arcGenerator = d3.arc();
 
   //Draw the Circle
-  data.forEach((datapoint, index) => {
+  months.forEach((month, index) => {
     var circle = svgContainer.append('path')
                            .attr('transform', 'translate(' + [400, 400] + ')')
                            .attr('d', arcGenerator({
