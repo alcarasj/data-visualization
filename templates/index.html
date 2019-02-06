@@ -6,18 +6,26 @@
 <style>
 </style>
 </head>
-<body style="position:fixed; top:0; bottom:0; left:0; right:0;">
-<h3>Assignment 2 Part A</h3>
-<button type="button" id="transform-button">Transform</button>
-<div id="root" style="height: 100%; display: flex; align-items: center; justify-content: center;">
-  <animateTransform attributeName="transform"
-                    attributeType="XML"
-                    type="rotate"
-                    from="0 60 70"
-                    to="360 60 70"
-                    dur="10s"
-                    repeatCount="indefinite"/>
-</div>
+<body style="position:fixed; top:0; bottom:0; left:0; right:0; background-color: grey">
+  <div id="part-a" style="display: flex; align-items: center; justify-content: space-around;  padding: 1%; background-color: white;">
+  <h3>Assignment 2 Part A - Nightingale's Coxcomb</h3>
+  <button type="button" id="transform-button">Transform</button>
+  </div>
+  <div id="part-b" style="display: flex; align-items: center; flex-direction: column; justify-content: space-around; margin-top: 1%; padding: 1%; background-color: white;">
+  <h3>Assignment 2 Part B - Minard's Chart</h3>
+  </div>
+
+
+
+
+
+
+
+
+
+
+
+
 <script>
   data = JSON.parse({{ data|tojson }});
 
@@ -33,62 +41,78 @@
   maxInjuryDeaths = Math.max(...injuryDeaths);
   maxOtherDeaths = Math.max(...otherDeaths);
 
-  var svgContainer = d3.select("#root").append("svg")
-                       .attr("id", "graph")
-                       .attr("width", "800px")
-                       .attr("height", "800px");
-  var arcGenerator = d3.arc();
-  var startAngle = 0;
+  const renderPartA = (event) => {
+    var svgContainer = d3.select("#part-a").append("svg")
+                     .attr("id", "graph-1")
+                     .attr("width", "400px")
+                     .attr("height", "400px");
+    var arcGenerator = d3.arc();
+    var startAngle = 0;
 
-  // Display data.
-  for (var i = 0; i < data.length; i++) {
-    endAngle = (2 * Math.PI * (i + 1))/data.length;
-    svgContainer.append('path')
-                .attr('transform', 'translate(' + [400, 400] + ')')
-                .attr('fill', 'blue')
-                .attr('stroke', 'black')
-                .attr('d', arcGenerator({
-                  innerRadius: 0,
-                  outerRadius: armySizes[i] * 350 / maxArmySize,
-                  startAngle,
-                  endAngle
-                }));
-    svgContainer.append('path')
-                .attr('transform', 'translate(' + [400, 400] + ')')
-                .attr('fill', 'grey')
-                .attr('stroke', 'grey')
-                .attr('d', arcGenerator({
-                  innerRadius: 0,
-                  outerRadius: zymoticDeaths[i] * 150 / maxZymoticDeaths,
-                  startAngle,
-                  endAngle
-                }));
-    svgContainer.append('path')
-                .attr('transform', 'translate(' + [400, 400] + ')')
-                .attr('fill', 'red')
-                .attr('stroke', 'red')
-                .attr('d', arcGenerator({
-                  innerRadius: 0,
-                  outerRadius: injuryDeaths[i] * 200 / maxInjuryDeaths,
-                  startAngle,
-                  endAngle
-                }));
-    svgContainer.append('path')
-                .attr('transform', 'translate(' + [400, 400] + ')')
-                .attr('fill', 'yellow')
-                .attr('stroke', 'yellow')
-                .attr('d', arcGenerator({
-                  innerRadius: 0,
-                  outerRadius: otherDeaths[i] * 100 / maxOtherDeaths,
-                  startAngle,
-                  endAngle
-                }));
-    startAngle = endAngle;
+    // Display data.
+    for (var i = 0; i < data.length; i++) {
+      endAngle = (2 * Math.PI * (i + 1))/data.length;
+      var circle = svgContainer.append('path')
+                  .attr('transform', 'translate(' + [200, 200] + ')')
+                  .attr('fill', 'blue')
+                  .attr('stroke', 'black')
+                  .attr('class', 'graph-1')
+                  .attr('d', arcGenerator({
+                    innerRadius: 0,
+                    outerRadius: armySizes[i] * 200 / maxArmySize,
+                    startAngle,
+                    endAngle
+                  }));
+      svgContainer.append('path')
+                  .attr('transform', 'translate(' + [200, 200] + ')')
+                  .attr('fill', 'grey')
+                  .attr('stroke', 'grey')
+                  .attr('d', arcGenerator({
+                    innerRadius: 0,
+                    outerRadius: zymoticDeaths[i] * 70 / maxZymoticDeaths,
+                    startAngle,
+                    endAngle
+                  }));
+      svgContainer.append('path')
+                  .attr('transform', 'translate(' + [200, 200] + ')')
+                  .attr('fill', 'red')
+                  .attr('stroke', 'red')
+                  .attr('d', arcGenerator({
+                    innerRadius: 0,
+                    outerRadius: injuryDeaths[i] * 50 / maxInjuryDeaths,
+                    startAngle,
+                    endAngle
+                  }));
+      svgContainer.append('path')
+                  .attr('transform', 'translate(' + [200, 200] + ')')
+                  .attr('fill', 'yellow')
+                  .attr('stroke', 'yellow')
+                  .attr('d', arcGenerator({
+                    innerRadius: 0,
+                    outerRadius: otherDeaths[i] * 30 / maxOtherDeaths,
+                    startAngle,
+                    endAngle
+                  }));
+      startAngle = endAngle;
+    }
   }
 
-  $('transform-button').on('click', (element) => {
-    $('.graph').css('transform', '')
-    $('.graph').css('transform', 'rotate(20deg)')
+  const renderPartB = (event) => {
+    var svgContainer2 = d3.select("#root").append("svg")
+                      .attr("id", "graph-2")
+                      .attr("width", "800px")
+                      .attr("height", "800px");
+  };
+
+  $('#transform-button').on('click', (event) => {
+    debugger;
+    $('#graph-1').css('transform', '')
+    $('#graph-1').css('transform', 'zoom(150%)')
+  });
+
+  $('document').ready(() => {
+    renderPartA();
+    renderPartB();
   });
 
 
