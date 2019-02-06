@@ -8,9 +8,9 @@
 <div id="root" style="height: 100%; display: flex; align-items: center; justify-content: center;">
 </div>
 <script>
-  data = "{{ data }}"
-  console.log(data);
-
+  data = JSON.parse({{ data|tojson }});
+  datapointCount = data.length;
+  console.log(data)
   //Make an SVG Container
   var svgContainer = d3.select("#root").append("svg")
                        .attr("width", "800px")
@@ -19,16 +19,16 @@
   var arcGenerator = d3.arc();
 
   //Draw the Circle
-  months.forEach((month, index) => {
+  for (var i = 0; i < data.length; data++) {
     var circle = svgContainer.append('path')
-                           .attr('transform', 'translate(' + [400, 400] + ')')
-                           .attr('d', arcGenerator({
-                            innerRadius: 0,
-                            outerRadius: 100,
-                            startAngle: -(Math.PI/datapointCount),
-                            endAngle: (Math.PI/datapointCount)
-                           }));
-  }); 
+                       .attr('transform', 'translate(' + [400, 400] + ')')
+                       .attr('d', arcGenerator({
+                        innerRadius: 0,
+                        outerRadius: 100,
+                        startAngle: -(Math.PI/datapointCount),
+                        endAngle: (Math.PI/datapointCount)
+                       }));
+  }
 </script>
 </body>
 </html>
