@@ -16,9 +16,10 @@ def index():
 	for row in reader:
 		datapoint = {
 			'month': row[0],
-			'zymotic_deaths': row[1],
-			'injury_deaths': row[2],
-			'annual_deaths': row[3]
+			'avg_army_size': row[1],
+			'zymotic_deaths': row[2],
+			'injury_deaths': row[3],
+			'other_deaths': row[4]
 		}
 		data.append(datapoint)
 	return render_template('./index.html', data=json.dumps(data))

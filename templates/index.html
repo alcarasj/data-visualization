@@ -3,32 +3,96 @@
 <head>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/5.8.0/d3.js"></script>
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+<style>
+</style>
 </head>
 <body style="position:fixed; top:0; bottom:0; left:0; right:0;">
+<h3>Assignment 2 Part A</h3>
+<button type="button" id="transform-button">Transform</button>
 <div id="root" style="height: 100%; display: flex; align-items: center; justify-content: center;">
+  <animateTransform attributeName="transform"
+                    attributeType="XML"
+                    type="rotate"
+                    from="0 60 70"
+                    to="360 60 70"
+                    dur="10s"
+                    repeatCount="indefinite"/>
 </div>
 <script>
   data = JSON.parse({{ data|tojson }});
-  datapointCount = data.length;
-  console.log(data)
-  //Make an SVG Container
+
+  // Get datasets.
+  armySizes = data.map(datapoint => datapoint.avg_army_size); 
+  zymoticDeaths = data.map(datapoint => datapoint.zymotic_deaths);
+  injuryDeaths = data.map(datapoint => datapoint.injury_deaths);
+  otherDeaths = data.map(datapoint => datapoint.other_deaths);
+
+  // Determine maximums for rational display.
+  maxArmySize = Math.max(...armySizes);
+  maxZymoticDeaths = Math.max(...zymoticDeaths);
+  maxInjuryDeaths = Math.max(...injuryDeaths);
+  maxOtherDeaths = Math.max(...otherDeaths);
+
   var svgContainer = d3.select("#root").append("svg")
+                       .attr("id", "graph")
                        .attr("width", "800px")
                        .attr("height", "800px");
-
   var arcGenerator = d3.arc();
+  var startAngle = 0;
 
-  //Draw the Circle
-  for (var i = 0; i < data.length; data++) {
-    var circle = svgContainer.append('path')
-                       .attr('transform', 'translate(' + [400, 400] + ')')
-                       .attr('d', arcGenerator({
-                        innerRadius: 0,
-                        outerRadius: 100,
-                        startAngle: -(Math.PI/datapointCount),
-                        endAngle: (Math.PI/datapointCount)
-                       }));
+  // Display data.
+  for (var i = 0; i < data.length; i++) {
+    endAngle = (2 * Math.PI * (i + 1))/data.length;
+    svgContainer.append('path')
+                .attr('transform', 'translate(' + [400, 400] + ')')
+                .attr('fill', 'blue')
+                .attr('stroke', 'black')
+                .attr('d', arcGenerator({
+                  innerRadius: 0,
+                  outerRadius: armySizes[i] * 350 / maxArmySize,
+                  startAngle,
+                  endAngle
+                }));
+    svgContainer.append('path')
+                .attr('transform', 'translate(' + [400, 400] + ')')
+                .attr('fill', 'grey')
+                .attr('stroke', 'grey')
+                .attr('d', arcGenerator({
+                  innerRadius: 0,
+                  outerRadius: zymoticDeaths[i] * 150 / maxZymoticDeaths,
+                  startAngle,
+                  endAngle
+                }));
+    svgContainer.append('path')
+                .attr('transform', 'translate(' + [400, 400] + ')')
+                .attr('fill', 'red')
+                .attr('stroke', 'red')
+                .attr('d', arcGenerator({
+                  innerRadius: 0,
+                  outerRadius: injuryDeaths[i] * 200 / maxInjuryDeaths,
+                  startAngle,
+                  endAngle
+                }));
+    svgContainer.append('path')
+                .attr('transform', 'translate(' + [400, 400] + ')')
+                .attr('fill', 'yellow')
+                .attr('stroke', 'yellow')
+                .attr('d', arcGenerator({
+                  innerRadius: 0,
+                  outerRadius: otherDeaths[i] * 100 / maxOtherDeaths,
+                  startAngle,
+                  endAngle
+                }));
+    startAngle = endAngle;
   }
+
+  $('transform-button').on('click', (element) => {
+    $('.graph').css('transform', '')
+    $('.graph').css('transform', 'rotate(20deg)')
+  });
+
+
+
 </script>
 </body>
 </html>
