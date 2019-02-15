@@ -34,7 +34,7 @@
   maxOtherDeaths = Math.max(...otherDeaths);
 
 
-  const renderPartA = (event, rotateDeg=0, zoomFactor=1, translateXY={ x: 200, y: 200 }, size=400) => {
+  const renderPartA = (event, rotateDeg=90, zoomFactor=1, translateXY={ x: 200, y: 200 }, size=400) => {
     var svgContainer = d3.select("#part-a").append("svg")
                                            .attr("id", "graph-1")
                                            .attr("width", size + "px")
@@ -46,7 +46,7 @@
     for (var i = 0; i < data.length; i++) {
       endAngle = (2 * Math.PI * (i + 1))/data.length;
       var armySizesGraph = svgContainer.append('path')
-      armySizesGraph.attr('transform', 'translate(' + [translateXY.x, translateXY.y] + ')')
+      armySizesGraph.attr('transform', 'rotate(' + rotateDeg + ' ' + [translateXY.x, translateXY.y] + ') translate(' + [translateXY.x, translateXY.y] + ')')
                     .attr('fill', 'blue')
                     .attr('stroke', 'black')
                     .attr('class', 'graph-1')
