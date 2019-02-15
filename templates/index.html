@@ -18,13 +18,15 @@
   </div>
 
 <script>
-  data = JSON.parse({{ data|tojson }});
+  dataPartA = JSON.parse({{ nightingale_data|tojson }});
+  dataPartB = JSON.parse({{ minard_data|tojson }});
+  console.log(dataPartB)
 
   // Get datasets.
-  armySizes = data.map(datapoint => datapoint.avg_army_size); 
-  zymoticDeaths = data.map(datapoint => datapoint.zymotic_deaths);
-  injuryDeaths = data.map(datapoint => datapoint.injury_deaths);
-  otherDeaths = data.map(datapoint => datapoint.other_deaths);
+  armySizes = dataPartA.map(datapoint => datapoint.avg_army_size); 
+  zymoticDeaths = dataPartA.map(datapoint => datapoint.zymotic_deaths);
+  injuryDeaths = dataPartA.map(datapoint => datapoint.injury_deaths);
+  otherDeaths = dataPartA.map(datapoint => datapoint.other_deaths);
   clock = true;
 
   // Determine maximums for rational display.
@@ -43,8 +45,8 @@
     var startAngle = 0;
 
     // Display data.
-    for (var i = 0; i < data.length; i++) {
-      endAngle = (2 * Math.PI * (i + 1))/data.length;
+    for (var i = 0; i < dataPartA.length; i++) {
+      endAngle = (2 * Math.PI * (i + 1))/dataPartA.length;
       var armySizesGraph = svgContainer.append('path')
       armySizesGraph.attr('transform', 'rotate(' + rotateDeg + ' ' + [translateXY.x, translateXY.y] + ') translate(' + [translateXY.x, translateXY.y] + ')')
                     .attr('fill', 'blue')
