@@ -1,27 +1,165 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/5.8.0/d3.js"></script>
-<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
-<style>
-</style>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/5.8.0/d3.js"></script>
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
 </head>
-<body style="position:fixed; top:0; bottom:0; left:0; right:0; background-color: grey">
+<body style="top:0; bottom:0; left:0; right:0; background-color: grey; font-family: sans-serif;">
   <div style="display: flex; align-items: center; justify-content: space-around;  padding: 1%; background-color: white;">
-  <h3>Assignment 2 Part A - Nightingale's Coxcomb</h3>
-  <button type="button" id="transform-button">Transform</button>
-  <div id="part-a">
-  </div>
+    <h3>Assignment 2 Part A - Nightingale's Coxcomb</h3>
+    <button type="button" id="transform-button">Transform</button>
+    <div id="part-a">
+    </div>
   </div>
   <div id="part-b" style="display: flex; align-items: center; flex-direction: column; justify-content: space-around; margin-top: 1%; padding: 1%; background-color: white;">
-  <h3>Assignment 2 Part B - Minard's Chart</h3>
+    <h3>Assignment 2 Part B - Minard's Chart</h3>
   </div>
+  <script>
+  // D3 Layout Trail (from https://github.com/bmschmidt/D3-trail)
+  d3.trail = function() {
+    var that = {}; //output object
+    var time = function() {}, //how to access the time data (must be numeric--should but doesn't handle dates);
+        currentTime, //points of this time will be display with full opacity;
+        //later points are dropped;
+        decayRange,  //points of this age will have opacity 0. If either currentTime or decayRange is not defined, opacity will be added as some undefined values.
+        data,       // the data being arranged
+        positioner, // a function that returns the [x,y] for the point.
+        sort,       // a function specifying the sort order
+        coordType = 'coordinates', //either "coordinates" or "xy"; if the first, returns a "coordinates" array; if the latter, returns x1,y1,x2,y2
+        grouping; // a function to split the data up into multiple segments;
+        grouping = function(d) {
+          return 1
+        }
+        positioner = function(datum) {
+        //given a datum, returns an [x,y] array.
+        //Might be a projection, for example, or a scale output.
+        return [datum.x,datum.y]
+      }
+      lineToSegments = function(values) {
+        //the returned array will be filtered to only include segments that fit the defined values.
 
-<script>
+        if (currentTime != undefined & decayRange != undefined) {
+          values = values.filter(function(d) {
+            return (time(d) <= currentTime && time(d) >= (currentTime-decayRange))
+          })
+        }
+        values = d3
+        .nest()
+        .key(function(d) {return grouping(d)})
+        .entries(values);
+        tmp = values;
+        output = [];
+        var i = 0
+        values.forEach(function(element) {
+          i++;
+          if (sort!=undefined) {
+            element.values.sort(sort)
+          }
+          if (i==1) {
+                //console.log(element)
+              }
+              var values = element.values;
+
+              for (var i = 0; i < (values.length); i++) {
+                var current = values[i];
+                if (values[i+1] != undefined) {
+                  current.next = values[i+1]
+                } else {
+                  current.next = {}
+                }
+                if (values[i-1] != undefined) {
+                  current.previous = values[i-1]
+                  if (coordType=="coordinates") {
+                    current.coordinates = [
+                    positioner(values[i-1]),
+                    positioner(values[i])
+                    ]
+                  } else if (coordType=="xy") {
+                    var a = positioner(values[i-1]),
+                    b = positioner(values[i]);
+                    current.x1=a[0]
+                    current.y1=a[1]
+                    current.x2=b[0]
+                    current.y2=b[1]
+                  }
+                  current.type = "LineString";
+                    //opacity will probably be this: the percentage of the decay range ago that it was.
+                    //Early tests should guarantee a result between 0 and 1.
+                  }
+                  current.opacity = 1-(currentTime-time(current))/decayRange
+                }
+                output = output.concat(values);
+              })
+        return output;
+      }
+
+      that.layout = function() {
+        output = lineToSegments(data);
+        return output;
+      }
+
+      that.coordType = function(x) {
+        if (!arguments.length) return coordType;
+        coordType= x
+        return that
+      }
+
+      that.grouping = function(x) {
+        if (!arguments.length) return grouping;
+        grouping= x
+        return that
+      }
+
+      that.time = function(x) {
+        if (!arguments.length) return time;
+        time = x
+        return that
+      }
+
+      that.currentTime = function(x) {
+        if (!arguments.length) return currentTime;
+        currentTime= x
+        return that
+      }
+
+      that.decayRange = function(x) {
+        if (!arguments.length) return decayRange;
+        decayRange= x
+        return that
+      }
+
+      that.data = function(x,append) {
+        if (!arguments.length) return data;
+
+        if (append) {
+          data = data || [];
+          data = data.concat(x)
+        } else {
+          data = x
+        }
+
+        return that
+      }
+
+      that.positioner = function(x) {
+        if (!arguments.length) return positioner;
+        positioner = x
+        return that
+      }
+      that.sort = function(x) { 
+        if (!arguments.length) return sort; 
+        sort= x
+        return that
+      }
+      return that;
+    }
+
+  // Begin actual code.
   dataPartA = JSON.parse({{ nightingale_data|tojson }});
   dataPartB = JSON.parse({{ minard_data|tojson }});
   console.log(dataPartB)
 
+  // FORMAT DATA FOR PART A.
   // Get datasets.
   armySizes = dataPartA.map(datapoint => datapoint.avg_army_size); 
   zymoticDeaths = dataPartA.map(datapoint => datapoint.zymotic_deaths);
@@ -29,18 +167,17 @@
   otherDeaths = dataPartA.map(datapoint => datapoint.other_deaths);
   clock = true;
 
-  // Determine maximums for rational display.
+  // Determine maximums.
   maxArmySize = Math.max(...armySizes);
   maxZymoticDeaths = Math.max(...zymoticDeaths);
   maxInjuryDeaths = Math.max(...injuryDeaths);
   maxOtherDeaths = Math.max(...otherDeaths);
 
-
   const renderPartA = (event, rotateDeg=90, zoomFactor=1, translateXY={ x: 200, y: 200 }, size=400) => {
     var svgContainer = d3.select("#part-a").append("svg")
-                                           .attr("id", "graph-1")
-                                           .attr("width", size + "px")
-                                           .attr("height", size + "px");
+    .attr("id", "graph-1")
+    .attr("width", size + "px")
+    .attr("height", size + "px");
     var arcGenerator = d3.arc();
     var startAngle = 0;
 
@@ -49,55 +186,118 @@
       endAngle = (2 * Math.PI * (i + 1))/dataPartA.length;
       var armySizesGraph = svgContainer.append('path')
       armySizesGraph.attr('transform', 'rotate(' + rotateDeg + ' ' + [translateXY.x, translateXY.y] + ') translate(' + [translateXY.x, translateXY.y] + ')')
-                    .attr('fill', 'blue')
-                    .attr('stroke', 'black')
-                    .attr('class', 'graph-1')
-                    .attr('d', arcGenerator({
-                      innerRadius: 0,
-                      outerRadius: armySizes[i] * (200 * zoomFactor)  / maxArmySize,
-                      startAngle,
-                      endAngle
-                    }));
+      .attr('fill', 'blue')
+      .attr('stroke', 'black')
+      .attr('class', 'graph-1')
+      .attr('d', arcGenerator({
+        innerRadius: 0,
+        outerRadius: armySizes[i] * (200 * zoomFactor) / maxArmySize,
+        startAngle,
+        endAngle
+      }));
       svgContainer.append('path')
-                  .attr('transform', 'translate(' + [translateXY.x, translateXY.y] + ')')
-                  .attr('fill', 'grey')
-                  .attr('stroke', 'grey')
-                  .attr('d', arcGenerator({
-                    innerRadius: 0,
-                    outerRadius: zymoticDeaths[i] * (70 * zoomFactor) / maxZymoticDeaths,
-                    startAngle,
-                    endAngle
-                  }));
+      .attr('transform', 'translate(' + [translateXY.x, translateXY.y] + ')')
+      .attr('fill', 'grey')
+      .attr('stroke', 'grey')
+      .attr('d', arcGenerator({
+        innerRadius: 0,
+        outerRadius: zymoticDeaths[i] * (70 * zoomFactor) / maxZymoticDeaths,
+        startAngle,
+        endAngle
+      }));
       svgContainer.append('path')
-                  .attr('transform', 'translate(' + [translateXY.x, translateXY.y] + ')')
-                  .attr('fill', 'red')
-                  .attr('stroke', 'red')
-                  .attr('d', arcGenerator({
-                    innerRadius: 0,
-                    outerRadius: injuryDeaths[i] * (50 * zoomFactor) / maxInjuryDeaths,
-                    startAngle,
-                    endAngle
-                  }));
+      .attr('transform', 'translate(' + [translateXY.x, translateXY.y] + ')')
+      .attr('fill', 'red')
+      .attr('stroke', 'red')
+      .attr('d', arcGenerator({
+        innerRadius: 0,
+        outerRadius: injuryDeaths[i] * (50 * zoomFactor) / maxInjuryDeaths,
+        startAngle,
+        endAngle
+      }));
       svgContainer.append('path')
-                  .attr('transform', 'translate(' + [translateXY.x, translateXY.y] + ')')
-                  .attr('fill', 'yellow')
-                  .attr('stroke', 'yellow')
-                  .attr('d', arcGenerator({
-                    innerRadius: 0,
-                    outerRadius: otherDeaths[i] * (30 * zoomFactor) / maxOtherDeaths,
-                    startAngle,
-                    endAngle
-                  }));
+      .attr('transform', 'translate(' + [translateXY.x, translateXY.y] + ')')
+      .attr('fill', 'yellow')
+      .attr('stroke', 'yellow')
+      .attr('d', arcGenerator({
+        innerRadius: 0,
+        outerRadius: otherDeaths[i] * (30 * zoomFactor) / maxOtherDeaths,
+        startAngle,
+        endAngle
+      }));
       startAngle = endAngle;
     }
     clock = !clock;
   }
 
+  // Some code was retrieved from https://github.com/bmschmidt/D3-trail/blob/master/minard.html
   const renderPartB = (event) => {
     var svgContainer2 = d3.select("#part-b").append("svg")
-                      .attr("id", "graph-2")
-                      .attr("width", "800px")
-                      .attr("height", "800px");
+    .attr("id", "graph-2")
+    .attr("width", "1200px")
+    .attr("height", "600px");
+
+    // Prepare data.
+    const proj = d3.geoMercator().translate([1200/2,600*(1/5)]).center([31,55]).scale(4000);
+    const layout = d3.trail().positioner(datapoint => proj([datapoint.longitude, datapoint.latitude]));
+    const armyData = layout.grouping(d => d.division).data(dataPartB.army).coordType("xy").layout();
+    const cityPoints = dataPartB.cities.map((city) => {
+      var point = proj([city.longitude, city.latitude]);
+      city.x = point[0];
+      city.y = point[1];
+      return city;
+    });
+    const widthScale = d3.scaleLinear().domain([0,340000]).range([1,37]);
+    const lines = d3.select("#graph-2").selectAll("line").data(armyData);
+    var cities = d3.select("#graph-2").selectAll("g").data(cityPoints);
+    const tempScale = d3.scaleLinear().domain([1,-41]).range([0,200]);
+    const tempLayout = d3.trail().positioner((d) => [proj([d.longitude,55])[0],tempScale(d.temp)]);
+    const tempData = tempLayout.grouping(() => 1).data(dataPartB.temps).coordType("xy").layout();
+    const color = d3.scaleOrdinal(d3.schemeCategory10).domain([1,2,3]);
+    var yAxis = d3.axisLeft().scale(tempScale);
+
+    // Render data.
+    lines.enter().append("line")
+    .attr("x1", (d) => d.x1)
+    .attr("y1", (d) => d.y1)
+    .attr("y2", (d) => d.y2)
+    .attr("x2", (d) =>  d.x2)
+    .style("stroke-width", (d) => widthScale(d.survivors))
+    .style("stroke", (d) => d.direction === "R" ? "red" : color(d.division))
+    .style("stroke-linecap","round")
+
+    cities = cities.enter().append("g").attr("transform", (d) => "translate(" + d.x + "," + d.y + ")");
+    circles = cities.append("circle").attr('r', 5).style("fill", "black");
+    labels = cities.append("text").text((d) => d.city_name).style("fill","black").attr("transform","translate(5,5)");
+
+
+    const temps = d3.select("#graph-2").append("g").attr("transform", "translate(0,300)");
+    const grid = temps.append("g")
+                      .attr("transform","translate(" + proj([37.6,55])[0] + "0)")
+                      .style("stroke", "lightgrey")
+    temps.append("g")
+         .attr("transform","translate(" + proj([37.6,55])[0] + "0)").attr("class","y axis")
+         .call(yAxis)
+    temps.append("text")
+         .style("font-size", 10)
+         .attr("transform","translate(1070,100)")
+         .text("Temperature (C)")
+    temps.append("text")
+         .style("font-size", 10)
+         .attr("transform","translate(1070,115)")
+         .text("Moscow to Kowno retreat")
+
+    tempLines = temps.selectAll("line.temperature").data(tempData);
+    tempLines.enter()
+             .append("line")
+             .attr("class","temperature")
+             .attr("x1", (d) => d.x1)
+             .attr("y1", (d) => d.y1)
+             .attr("y2", (d) => d.y2)
+             .attr("x2", (d) =>  d.x2)
+             .style("stroke-width", 4)
+             .style("stroke", "red")
+             .style("stroke-linecap", "round")
   };
 
   $('#transform-button').on('click', (event) => {
@@ -109,11 +309,8 @@
 
   $('document').ready((event) => {
     renderPartA(event, rotateDeg=0);
-    renderPartB(event, rotateDeg=0);
+    renderPartB(event);
   });
-
-
-
 </script>
 </body>
 </html>
