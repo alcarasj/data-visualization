@@ -1,6 +1,4 @@
-from flask import Flask
-from flask import render_template
-from flask import request
+from flask import Flask, render_template, request, Response
 import csv
 import json
 
@@ -24,7 +22,7 @@ def evaluate_ccr(data):
                 ccr = 60 / time_diff
                 ccr_data.append(ccr)
             else:
-                ccr_data.append(None)    
+                ccr_data.append(None)
             prev_compression_time = elapsed_time
         else:
             interrupted_frames += 1

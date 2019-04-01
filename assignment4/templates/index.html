@@ -15,17 +15,42 @@
   </div>
   <div style="display: flex; flex-direction: column; align-items: center; justify-content: space-around;  padding: 1%; background-color: white; margin-top: 1%;">
     <h2>DATASET: {{ dataset }} Scene</h2>
-    <div style="width: 100%; height: 100vh;" id="dataset-chart"></div>
+    <div style="display: flex; width: 100%; align-items: center; justify-content: space-between;">
+      <div style="width: 100%; height: 120vh;" id="dataset-chart"></div>
+      <div style="display: flex; flex-direction: column;">
+      {% if dataset == "Ideal" %}
+      <div>
+      <video id="result-video" width="300" muted>
+      <source src="https://drive.google.com/uc?export=download&id=12PPvbUieetu5BHdRFOL4pqcN3u46Jbl3" type='video/mp4'>
+      </video>
+      </div>
+      <div>
+      <video id="gt-video" width="300" muted>
+      <source src="https://drive.google.com/uc?export=download&id=1S8FkTEMn8Uw9v2WOHZQ5qlqwx7mg5ex7" type='video/mp4'>
+      </video>
+      </div>
+      {% elif dataset == "Noisy" %}
+      <div>
+      <video id="result-video" width="300" muted>
+      <source src="https://drive.google.com/uc?export=download&id=17lQGR5KgwT0Iog1B_9oC82Jos7qDJE_M" type='video/mp4'>
+      </video>
+      </div>
+      <div>
+      <video id="gt-video" width="300" muted>
+      <source src="https://drive.google.com/uc?export=download&id=1442goyFznSHMWVx3EVhZJNbFD7OyK7Va" type='video/mp4'>
+      </video>
+      </div>
+      {% endif %}
+    </div>
   </div>
   </div>
       
 <script>
 GT_LINE_COLOR = 'blue';
-GT_DOT_COLOR = 'lightblue';
+GT_DOT_COLOR = 'deepskyblue';
 RSLT_LINE_COLOR = 'darkred'
 RSLT_DOT_COLOR = 'red'
 DOT_SIZE = 10
-
 
 fps = {{ fps }};
 groundTruthData = JSON.parse({{ gt_data|tojson }});
@@ -111,11 +136,12 @@ resultsCCR = {
   yaxis: 'y3', 
   marker: {
     color: RSLT_DOT_COLOR,
-    size: DOT_SIZE
+    size: DOT_SIZE,
+    opacity: 0.75
   },
 };
 
-data = [resultsCCR, groundTruthCCR, opticalFlow, detectedCompressions, groundTruth, trueCompressions];
+data = [groundTruthCCR, resultsCCR, opticalFlow, detectedCompressions, groundTruth, trueCompressions];
 
 layout = {
   xaxis: { title: 'Time (seconds)' },
@@ -125,9 +151,9 @@ layout = {
   grid: {
     rows: 3,
     columns: 1,
-    subplots:[['xy3'], ['xy'], ['xy2'], ]
+    subplots:[['xy3'], ['xy'], ['xy2']]
   },
-  hovermode: 'closest',
+  hovermode: 'compare',
   annotations: [{
     "x": 0.5,
     "y": 1,
@@ -178,6 +204,10 @@ chart.on('plotly_hover', (data) => {
     {'type': 'line', 'x0': x, 'y0': -75000, 'x1': x, 'y1': 75000, 'xref': 'x', 'yref': 'y3', line: { color: 'rgb(55, 128, 191)', width: 3 }}
   ]
   Plotly.update(chart, {}, { shapes });
+  resultVideo = document.getElementById("result-video");
+  groundTruthVideo = document.getElementById("gt-video");
+  resultVideo.currentTime = x;
+  groundTruthVideo.currentTime = x;
 });
 
 </script>
