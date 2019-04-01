@@ -23,14 +23,22 @@
 fps = {{ fps }};
 groundTruthData = JSON.parse({{ gt_data|tojson }});
 resultsData = JSON.parse({{ results_data|tojson }});
-groundTruthCCR = JSON.parse({{ gt_ccr|tojson }});
-resultsCCR = JSON.parse({{ results_ccr|tojson }});
+groundTruthCCRData = JSON.parse({{ gt_ccr|tojson }});
+resultsCCRData = JSON.parse({{ results_ccr|tojson }});
+groundTruthCompressions = groundTruthCCRData.filter(d => d !== null)
+groundTruthCCRAvg = Math.round(groundTruthCompressions.reduce((total, elem) => total + elem) / groundTruthCompressions.length);
+resultsCompressions = resultsCCRData.filter(d => d !== null)
+resultsCCRAvg = Math.round(resultsCompressions.reduce((total, elem) => total + elem) / resultsCompressions.length);
 
 opticalFlow = {
   x: resultsData.map((d, i) => i/fps),
   y: resultsData.map(d => d[0]),
   type: 'line',
-  name: 'Optical Flow'
+  name: 'Optical Flow',
+  line: {
+    color: 'orange',
+    size: 7.5,
+  },
 };
 
 detectedCompressions = {
@@ -53,7 +61,11 @@ groundTruth = {
   type: 'line',
   name: 'Ground Truth',
   xaxis: 'x',
-  yaxis: 'y2'
+  yaxis: 'y2',
+  line: {
+    color: 'blue',
+    size: 7.5,
+  },
 };
 
 trueCompressions = {
@@ -63,19 +75,52 @@ trueCompressions = {
   mode: 'markers',
   name: 'True Compression (N=' + groundTruthData.filter(d => d[1] === "Compression").length + ')',
   xaxis: 'x',
-  yaxis: 'y2',
+  yaxis: 'y2', 
+  marker: {
+    color: 'cyan',
+    size: 7.5,
+  },
 };
 
-data = [opticalFlow, detectedCompressions, groundTruth, trueCompressions];
+groundTruthCCR = {
+  x: groundTruthCCRData.map((d, i) => i/fps),
+  y: groundTruthCCRData.map(d => d),
+  type: 'scatter',
+  mode: 'markers',
+  name: 'True Compression (μ=' + groundTruthCCRAvg + 'CPM)',
+  xaxis: 'x',
+  yaxis: 'y3', 
+  marker: {
+    color: 'cyan',
+    size: 7.5,
+  },
+};
+
+resultsCCR = {
+  x: resultsCCRData.map((d, i) => i/fps),
+  y: resultsCCRData.map(d => d),
+  type: 'scatter',
+  mode: 'markers',
+  name: 'Detected Compression (μ=' + resultsCCRAvg + 'CPM)',
+  xaxis: 'x',
+  yaxis: 'y3', 
+  marker: {
+    color: 'red',
+    size: 7.5,
+  },
+};
+
+data = [opticalFlow, detectedCompressions, groundTruth, trueCompressions, groundTruthCCR, resultsCCR];
 
 layout = {
-  xaxis: { title: 'Time (seconds)', domain: [0, 120] },
+  xaxis: { title: 'Time (seconds)' },
   yaxis: { title: 'Vertical Acceleration (pixels/s^2)' },
   yaxis2: { title: 'Frame Y Co-ords (pixels)' },
+  yaxis3: { title: 'Compressions/min' },
   grid: {
-    rows: 2,
+    rows: 3,
     columns: 1,
-    subplots:[['xy'], ['xy2']]
+    subplots:[['xy'], ['xy2'], ['xy3']]
   },
   annotations: [
       {
@@ -90,14 +135,25 @@ layout = {
         "xanchor": "center",
         "yanchor": "bottom",
         "showarrow": false
-      },
-      {
+      }, {
         "x": 0.5,
-        "y": 0.4,
+        "y": 0.65,
         "font": {
           "size": 16
         },
         "text": "Ground Truth",
+        "xref": "paper",
+        "yref": "paper",
+        "xanchor": "center",
+        "yanchor": "bottom",
+        "showarrow": false
+      }, {
+        "x": 0.5,
+        "y": 0.275,
+        "font": {
+          "size": 16
+        },
+        "text": "Chest Compression Rate",
         "xref": "paper",
         "yref": "paper",
         "xanchor": "center",
