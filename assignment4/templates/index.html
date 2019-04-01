@@ -6,10 +6,10 @@
 </head>
 <body style="top:0; bottom:0; left:0; right:0; background-color: grey; font-family: sans-serif;">
   <div style="display: flex; flex-direction: column; align-items: center; justify-content: space-around; background-color: white;">
-      <h1>Data Visualisation Assignment 4</h1>
+      <h1>Cardiopulmonary Assistant</h1>
       <div style="display: flex; align-items: center; justify-content: space-around; width: 100%">
-        <h3><a href="/?dataset=ideal">Ideal Scene</a></h3>
-        <h3><a href="/?dataset=noisy">Noisy Scene</a> </h3>
+        <h3>{% if dataset != "Ideal"  %}<a href="/?dataset=ideal">Ideal Scene</a>{% else %}Ideal Scene{% endif %}</h3>
+        <h3>{% if dataset != "Noisy"  %}<a href="/?dataset=noisy">Noisy Scene</a>{% else %}Noisy Scene{% endif %}</h3>
       </div>
     </div>
   </div>
@@ -20,6 +20,13 @@
   </div>
       
 <script>
+GT_LINE_COLOR = 'darkgreen';
+GT_DOT_COLOR = 'chartreuse';
+RSLT_LINE_COLOR = 'darkred'
+RSLT_DOT_COLOR = 'red'
+DOT_SIZE = 10
+
+
 fps = {{ fps }};
 groundTruthData = JSON.parse({{ gt_data|tojson }});
 resultsData = JSON.parse({{ results_data|tojson }});
@@ -36,8 +43,7 @@ opticalFlow = {
   type: 'line',
   name: 'Optical Flow',
   line: {
-    color: 'orange',
-    size: 7.5,
+    color: RSLT_LINE_COLOR,
   },
 };
 
@@ -50,8 +56,8 @@ detectedCompressions = {
   xaxis: 'x',
   yaxis: 'y',
   marker: {
-    color: 'red',
-    size: 7.5,
+    color: RSLT_DOT_COLOR,
+    size: DOT_SIZE,
   },
 };
 
@@ -63,8 +69,7 @@ groundTruth = {
   xaxis: 'x',
   yaxis: 'y2',
   line: {
-    color: 'blue',
-    size: 7.5,
+    color: GT_LINE_COLOR,
   },
 };
 
@@ -77,8 +82,8 @@ trueCompressions = {
   xaxis: 'x',
   yaxis: 'y2', 
   marker: {
-    color: 'cyan',
-    size: 7.5,
+    color: GT_DOT_COLOR,
+    size: DOT_SIZE,
   },
 };
 
@@ -91,8 +96,8 @@ groundTruthCCR = {
   xaxis: 'x',
   yaxis: 'y3', 
   marker: {
-    color: 'cyan',
-    size: 7.5,
+    color: GT_DOT_COLOR,
+    size: DOT_SIZE
   },
 };
 
@@ -105,12 +110,12 @@ resultsCCR = {
   xaxis: 'x',
   yaxis: 'y3', 
   marker: {
-    color: 'red',
-    size: 7.5,
+    color: RSLT_DOT_COLOR,
+    size: DOT_SIZE
   },
 };
 
-data = [opticalFlow, detectedCompressions, groundTruth, trueCompressions, groundTruthCCR, resultsCCR];
+data = [resultsCCR, groundTruthCCR, opticalFlow, detectedCompressions, groundTruth, trueCompressions];
 
 layout = {
   xaxis: { title: 'Time (seconds)' },
@@ -120,50 +125,71 @@ layout = {
   grid: {
     rows: 3,
     columns: 1,
-    subplots:[['xy'], ['xy2'], ['xy3']]
+    subplots:[['xy3'], ['xy'], ['xy2'], ]
   },
-  annotations: [
-      {
-        "x": 0.5,
-        "y": 1,
-        "font": {
-          "size": 16
-        },
-        "text": "Solution",
-        "xref": "paper",
-        "yref": "paper",
-        "xanchor": "center",
-        "yanchor": "bottom",
-        "showarrow": false
-      }, {
-        "x": 0.5,
-        "y": 0.65,
-        "font": {
-          "size": 16
-        },
-        "text": "Ground Truth",
-        "xref": "paper",
-        "yref": "paper",
-        "xanchor": "center",
-        "yanchor": "bottom",
-        "showarrow": false
-      }, {
-        "x": 0.5,
-        "y": 0.275,
-        "font": {
-          "size": 16
-        },
-        "text": "Chest Compression Rate",
-        "xref": "paper",
-        "yref": "paper",
-        "xanchor": "center",
-        "yanchor": "bottom",
-        "showarrow": false
-      },
-    ],
+  shapes: [{
+    type: 'line',
+    x0: 1,
+    y0: 0,
+    x1: 1,
+    y1: 5000,
+
+    xref: 'x',
+    yref: 'y2'
+  }],
+  hovermode: 'closest',
+  annotations: [{
+    "x": 0.5,
+    "y": 1,
+    "font": {
+      "size": 16
+    },
+    "text": "Chest Compression Rate",
+    "xref": "paper",
+    "yref": "paper",
+    "xanchor": "center",
+    "yanchor": "bottom",
+    "showarrow": false
+  }, {
+    "x": 0.5,
+    "y": 0.65,
+    "font": {
+      "size": 16
+    },
+    "text": "Solution",
+    "xref": "paper",
+    "yref": "paper",
+    "xanchor": "center",
+    "yanchor": "bottom",
+    "showarrow": false
+  }, {
+    "x": 0.5,
+    "y": 0.275,
+    "font": {
+      "size": 16
+    },
+    "text": "Ground Truth",
+    "xref": "paper",
+    "yref": "paper",
+    "xanchor": "center",
+    "yanchor": "bottom",
+    "showarrow": false
+  }],
 };
 
 Plotly.newPlot('dataset-chart', data, layout);
+
+chart = document.getElementById('dataset-chart');
+chart.on('plotly_hover', (data) => {
+  x = data.points[0].x
+  shapes = [
+    {'type': 'line', 'x0': x, 'y0': -75000, 'x1': x, 'y1': 75000, 'xref': 'x', 'yref': 'y1', line: { color: 'rgb(55, 128, 191)', width: 3 }},
+    {'type': 'line', 'x0': x, 'y0': -75000, 'x1': x, 'y1': 75000, 'xref': 'x', 'yref': 'y2', line: { color: 'rgb(55, 128, 191)', width: 3 }},
+    {'type': 'line', 'x0': x, 'y0': -75000, 'x1': x, 'y1': 75000, 'xref': 'x', 'yref': 'y3', line: { color: 'rgb(55, 128, 191)', width: 3 }}
+  ]
+  Plotly.update(chart, {}, { shapes });
+});
+
 </script>
 </body>
 </html>
