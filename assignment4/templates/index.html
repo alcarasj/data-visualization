@@ -15,13 +15,13 @@
   </div>
   <div style="display: flex; flex-direction: column; align-items: center; justify-content: space-around;  padding: 1%; background-color: white; margin-top: 1%;">
     <h2>DATASET: {{ dataset }} Scene</h2>
-    <div style="width: 100%; height: 1000px;" id="dataset-chart"></div>
+    <div style="width: 100%; height: 100vh;" id="dataset-chart"></div>
   </div>
   </div>
       
 <script>
-GT_LINE_COLOR = 'darkgreen';
-GT_DOT_COLOR = 'chartreuse';
+GT_LINE_COLOR = 'blue';
+GT_DOT_COLOR = 'lightblue';
 RSLT_LINE_COLOR = 'darkred'
 RSLT_DOT_COLOR = 'red'
 DOT_SIZE = 10
@@ -127,16 +127,6 @@ layout = {
     columns: 1,
     subplots:[['xy3'], ['xy'], ['xy2'], ]
   },
-  shapes: [{
-    type: 'line',
-    x0: 1,
-    y0: 0,
-    x1: 1,
-    y1: 5000,
-
-    xref: 'x',
-    yref: 'y2'
-  }],
   hovermode: 'closest',
   annotations: [{
     "x": 0.5,
