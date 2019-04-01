@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
-  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>\
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
 </head>
 <body style="top:0; bottom:0; left:0; right:0; background-color: grey; font-family: sans-serif;">
   <div style="display: flex; flex-direction: column; align-items: center; justify-content: space-around; background-color: white;">
@@ -13,7 +13,9 @@
       </div>
     </div>
   </div>
-  <div id="MyDiv" style="display: flex; align-items: center; justify-content: space-around;  padding: 1%; background-color: white; margin-top: 1%">
+  <div style="display: flex; flex-direction: column; align-items: center; justify-content: space-around;  padding: 1%; background-color: white; margin-top: 1%">
+    <h2>DATASET: {{ dataset }} Scene</h2>
+    <div style="width: 100%;" id="ground-truth"></div>
   </div>
   </div>
       
@@ -24,21 +26,30 @@ resultsData = JSON.parse({{ results_data|tojson }});
 groundTruthCCR = JSON.parse({{ gt_ccr|tojson }});
 resultsCCR = JSON.parse({{ results_ccr|tojson }});
 
-var trace1 = {
-  x: [1, 2, 3, 4],
-  y: [10, 15, 13, 17],
-  type: 'scatter'
+groundTruth = {
+  x: groundTruthData.map((d, i) => i/fps),
+  y: groundTruthData.map(d => d[0]),
+  type: 'line',
+  name: 'Ground Truth'
 };
 
-var trace2 = {
-  x: [1, 2, 3, 4],
-  y: [16, 5, 11, 9],
-  type: 'scatter'
+trueCompressions = {
+  x: groundTruthData.map((d, i) => i/fps),
+  y: groundTruthData.map(d => d[1] === "Compression" ? d[0] : null),
+  type: 'scatter',
+  mode: 'markers',
+  name: 'True Compression (N=' + groundTruthData.filter(d => d[1] === "Compression").length + ')' 
 };
 
-var data = [trace1, trace2];
+data = [groundTruth, trueCompressions];
 
-Plotly.newPlot('MyDiv', data);
+layout = {
+  title: 'Ground Truth',
+  xaxis: { title: 'Time (seconds)' },
+  yaxis: { title: 'Frame Y Co-ords (pixels)' },
+};
+
+Plotly.newPlot('ground-truth', data, layout);
 
 
 </script>

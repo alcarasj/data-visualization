@@ -52,7 +52,7 @@ def index():
 	gt_ccr = evaluate_ccr(gt_data)
 	results_ccr = evaluate_ccr(results_data)
 
-	return render_template('./index.html', gt_data=json.dumps(gt_data), results_data=json.dumps(results_data), gt_ccr=json.dumps(gt_ccr), results_ccr=json.dumps(results_ccr), fps=FPS)
+	return render_template('./index.html', gt_data=json.dumps(gt_data), results_data=json.dumps(results_data), gt_ccr=json.dumps(gt_ccr), results_ccr=json.dumps(results_ccr), fps=FPS, dataset=dataset_name.capitalize())
 
 if __name__ == "__main__":
     server.run(debug=True, port=PORT)
