@@ -1,1 +1,1 @@
-web: gunicorn app:cpr-assistant
+web: gunicorn server:server
