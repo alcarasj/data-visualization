@@ -9,7 +9,7 @@
   <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
 </head>
 <body style="top:0; bottom:0; left:0; right:0; background-color: grey; font-family: sans-serif;">
-  <div style="display: flex; flex-direction: column; align-items: center; justify-content: space-around; padding: 1%; background-color: white;">
+  <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 1%; background-color: white;">
       <h1>Cardiopulmonary Assistant</h1>
       <div style="display: flex; align-items: center; justify-content: space-around; width: 50%">
         <h3>{% if dataset != "Ideal"  %}<a href="/?dataset=ideal">Ideal Scene</a>{% else %}Ideal Scene{% endif %}</h3>
@@ -20,8 +20,8 @@
   <div style="display: flex; flex-direction: column; align-items: center; justify-content: space-around; padding: 1%; background-color: white; margin-top: 1%;">
     <h2>DATASET: {{ dataset }} Scene</h2>
     <div>
-    <button id="stop-play-btn" class="btn btn-primary btn-lg" type="button">Play</button>
-    <button id="reset-btn" class="btn btn-primary btn-lg" type="button">Reset</button>
+    <button id="stop-play-btn" class="btn btn-primary btn-lg" type="button">Play (or press P)</button>
+    <button id="reset-btn" class="btn btn-primary btn-lg" type="button">Reset (or press R)</button>
     </div>
     <div style="display: flex; width: 100%; align-items: center; justify-content: space-between;">
       <div style="width: 100%; height: 120vh;" id="dataset-chart"></div>
@@ -32,9 +32,9 @@
         </video>
         </div>
         <div>
-        <p style="color: darkred;" id="result-info">SLTN Average CCR: 0CPM, Detected: 0</p>   
+        <p style="color: darkred;" id="result-info">SLTN Avg CCR: 0CPM, Det'd: 0</p>   
         <p style="color: black;" id="time-info">Time: 0s</p>     
-        <p style="color: blue;" id="gt-info">GT Average CCR: 0CPM, Detected: 0</p>
+        <p style="color: blue;" id="gt-info">GT Avg CCR: 0CPM, Det'd: 0</p>
         </div>
         <div>
         <video id="gt-video" width="300" muted>
@@ -203,21 +203,29 @@ groundTruthVideo = document.getElementById("gt-video");
 chart = document.getElementById('dataset-chart');
 
 ccrAtTime = (time) => {
-  frame = Math.ceil(time * fps);
-  resultsSlice = resultsCCRData.slice(0, frame - 1);
-  groundTruthSlice = groundTruthCCRData.slice(0, frame - 1);
+  frame = Math.round(time * fps);
+  resultsSlice = resultsCCRData.slice(0, frame);
+  groundTruthSlice = groundTruthCCRData.slice(0, frame);
   resultsCompressionsAtTime = resultsSlice.filter(d => d !== null);
   groundTruthCompressionsAtTime = groundTruthSlice.filter(d => d !== null);
-  resultsCCRAvgAtTime = Math.floor(resultsCompressionsAtTime.reduce((total, elem) => total + elem) / resultsCompressionsAtTime.length);
+  if (resultsCompressionsAtTime.length > 0) {
+    resultsCCRAvgAtTime = Math.round(resultsCompressionsAtTime.reduce((total, elem) => total + elem) / resultsCompressionsAtTime.length);
   groundTruthCCRAvgAtTime = Math.round(groundTruthCompressionsAtTime.reduce((total, elem) => total + elem) / groundTruthCompressionsAtTime.length);
+    detected = resultsCompressionsAtTime.length;
+    nc = groundTruthCompressionsAtTime.length
+  } else {
+    resultsCCRAvgAtTime = 0;
+    groundTruthCCRAvgAtTime = 0;
+    detected = 0;
+    nc = 0;
+  }
 
-  $("#result-info").text("SLTN Average CCR: " + resultsCCRAvgAtTime + ", Detected: " + (resultsCompressionsAtTime.length + 1))
-  $("#gt-info").text("GT Average CCR: " + groundTruthCCRAvgAtTime + ", Nc: " + (groundTruthCompressionsAtTime.length + 1))
+  $("#result-info").text("SLTN Avg CCR: " + resultsCCRAvgAtTime + "CPM, Det'd: " + (detected + 1))
+  $("#gt-info").text("GT Avg CCR: " + groundTruthCCRAvgAtTime + "CPM, N: " + (nc + 1))
   $("#time-info").text("Time: " + time + "s")
 };
 
 chart.on('plotly_hover', (data) => {
-  console.log(data);
   x = data.points[0].x
   shapes = [
     {'type': 'line', 'x0': x, 'y0': -75000, 'x1': x, 'y1': 75000, 'xref': 'x', 'yref': 'y1', line: { color: SEEK_COLOR, width: 3 }},
@@ -230,21 +238,22 @@ chart.on('plotly_hover', (data) => {
   ccrAtTime(x);
 });
 
-$('#stop-play-btn').on('click', (event) => {
+togglePlayback = () => {
   isPlaying = !isPlaying;
   if (isPlaying) {
-    $(event.target).text("Pause");
+    $("#stop-play-btn").text("Pause (or press P)");
     resultVideo.play();
     groundTruthVideo.play();
+    Plotly.update(chart, {}, { hovermode: false });
   } else {
-    $(event.target).text("Play");
+    $("#stop-play-btn").text("Play (or press P)");
     resultVideo.pause();
     groundTruthVideo.pause();
     Plotly.update(chart, {}, { hovermode: 'x' });
   }
-});
+};
 
-$('#reset-btn').on('click', (event) => {
+resetPlayback = () => {
     x = 0;
     resultVideo.currentTime = 0;
     groundTruthVideo.currentTime = 0;
@@ -253,11 +262,14 @@ $('#reset-btn').on('click', (event) => {
       {'type': 'line', 'x0': x, 'y0': -75000, 'x1': x, 'y1': 75000, 'xref': 'x', 'yref': 'y2', line: { color: SEEK_COLOR, width: 3 }},
       {'type': 'line', 'x0': x, 'y0': -75000, 'x1': x, 'y1': 75000, 'xref': 'x', 'yref': 'y3', line: { color: SEEK_COLOR, width: 3 }}
     ];
-    $("#result-info").text("SLTN Average CCR: 0CPM, Detected: 0");
-    $("#gt-info").text("GT Average CCR: 0CPM, N: 0");
+    $("#result-info").text("SLTN Avg CCR: 0CPM, Det'd: 0");
+    $("#gt-info").text("GT Avg CCR: 0CPM, N: 0");
     $("#time-info").text("Time: 0s")
     Plotly.update(chart, {}, { shapes, });
-});
+}
+
+$('#stop-play-btn').on('click', togglePlayback);
+$('#reset-btn').on('click', resetPlayback);
 
 moveSeek = () => {
   if (isPlaying) {
@@ -271,6 +283,14 @@ moveSeek = () => {
     Plotly.update(chart, {}, { shapes, hovermode: false });
   }
 };
+
+document.body.onkeyup = (event) => {
+    if (event.keyCode === 80) {
+        togglePlayback();
+    } else if (event.keyCode === 82) {
+      resetPlayback();
+    }
+}
 
 window.setInterval(moveSeek, 10);
 
