@@ -61,4 +61,4 @@ def index():
 
 
 if __name__ == "__main__":
-    server.run(port=PORT)
+    server.run(debug=True, port=PORT)

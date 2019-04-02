@@ -11,16 +11,17 @@
 <body style="top:0; bottom:0; left:0; right:0; background-color: grey; font-family: sans-serif;">
   <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 1%; background-color: white;">
       <h1>Cardiopulmonary Assistant</h1>
-      <div style="display: flex; align-items: center; justify-content: space-around; width: 50%">
-        <h3>{% if dataset != "Ideal"  %}<a href="/?dataset=ideal">Ideal Scene</a>{% else %}Ideal Scene{% endif %}</h3>
-        <h3>{% if dataset != "Noisy"  %}<a href="/?dataset=noisy">Noisy Scene</a>{% else %}Noisy Scene{% endif %}</h3>
+      <h2>Select a dataset:</h2>
+      <div style="display: flex; align-items: center; justify-content: space-around; width: 50%; background-color: lightgray; padding: 1%;">
+        <div ><h3>{% if dataset != "Ideal"  %}<a href="/?dataset=ideal">Ideal Scene</a>{% else %}<strong>Ideal Scene</strong>{% endif %}</h3></div>
+        <div><h3>{% if dataset != "Noisy"  %}<a href="/?dataset=noisy">Noisy Scene</a>{% else %}<strong>Noisy Scene</strong>{% endif %}</h3></div>
       </div>
     </div>
   </div>
   <div style="display: flex; flex-direction: column; align-items: center; justify-content: space-around; padding: 1%; background-color: white; margin-top: 1%;">
-    <h2>DATASET: {{ dataset }} Scene</h2>
+    <h2><strong>{{ dataset }} Scene</strong></h2>
     <div>
-    <button id="stop-play-btn" class="btn btn-primary btn-lg" type="button">Play (or press P)</button>
+    <button id="stop-play-btn" class="btn btn-primary btn-lg" type="button">► Play (or press P)</button>
     <button id="reset-btn" class="btn btn-primary btn-lg" type="button">Reset (or press R)</button>
     </div>
     <div style="display: flex; width: 100%; align-items: center; justify-content: space-between;">
@@ -241,12 +242,12 @@ chart.on('plotly_hover', (data) => {
 togglePlayback = () => {
   isPlaying = !isPlaying;
   if (isPlaying) {
-    $("#stop-play-btn").text("Pause (or press P)");
+    $("#stop-play-btn").text("■ Pause (or press P)");
     resultVideo.play();
     groundTruthVideo.play();
     Plotly.update(chart, {}, { hovermode: false });
   } else {
-    $("#stop-play-btn").text("Play (or press P)");
+    $("#stop-play-btn").text("► Play (or press P)");
     resultVideo.pause();
     groundTruthVideo.pause();
     Plotly.update(chart, {}, { hovermode: 'x' });
@@ -292,7 +293,7 @@ document.body.onkeyup = (event) => {
     }
 }
 
-window.setInterval(moveSeek, 10);
+window.setInterval(moveSeek, 100);
 
 </script>
 </body>
