@@ -1,6 +1,7 @@
 from flask import Flask, render_template, request, Response
 import csv
 import json
+import numpy as np
 
 server = Flask(__name__)
 PORT = 8080
@@ -50,7 +51,13 @@ def index():
 	gt_ccr = evaluate_ccr(gt_data)
 	results_ccr = evaluate_ccr(results_data)
 
-	return render_template('./index.html', gt_data=json.dumps(gt_data), results_data=json.dumps(results_data), gt_ccr=json.dumps(gt_ccr), results_ccr=json.dumps(results_ccr), fps=FPS, dataset=dataset_name.capitalize())
+	return render_template('./index.html', 
+						   gt_data=json.dumps(gt_data),
+						   results_data=json.dumps(results_data),
+						   gt_ccr=json.dumps(gt_ccr),
+						   results_ccr=json.dumps(results_ccr),
+						   fps=FPS,
+						   dataset=dataset_name.capitalize())
 
 @server.route("/assets/<file_name>", methods=["GET"])
 def get_file(file_name):

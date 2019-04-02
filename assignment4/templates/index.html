@@ -5,30 +5,37 @@
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
   <script src='https://vjs.zencdn.net/7.4.1/video.js'></script>
   <link href="https://vjs.zencdn.net/7.4.1/video-js.css" rel="stylesheet">
+  <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
 </head>
 <body style="top:0; bottom:0; left:0; right:0; background-color: grey; font-family: sans-serif;">
-  <div style="display: flex; flex-direction: column; align-items: center; justify-content: space-around; background-color: white;">
+  <div style="display: flex; flex-direction: column; align-items: center; justify-content: space-around; padding: 1%; background-color: white;">
       <h1>Cardiopulmonary Assistant</h1>
-      <div style="display: flex; align-items: center; justify-content: space-around; width: 100%">
+      <div style="display: flex; align-items: center; justify-content: space-around; width: 50%">
         <h3>{% if dataset != "Ideal"  %}<a href="/?dataset=ideal">Ideal Scene</a>{% else %}Ideal Scene{% endif %}</h3>
         <h3>{% if dataset != "Noisy"  %}<a href="/?dataset=noisy">Noisy Scene</a>{% else %}Noisy Scene{% endif %}</h3>
       </div>
     </div>
   </div>
-  <div style="display: flex; flex-direction: column; align-items: center; justify-content: space-around;  padding: 1%; background-color: white; margin-top: 1%;">
+  <div style="display: flex; flex-direction: column; align-items: center; justify-content: space-around; padding: 1%; background-color: white; margin-top: 1%;">
     <h2>DATASET: {{ dataset }} Scene</h2>
+    <div>
+    <button id="stop-play-btn" class="btn btn-primary btn-lg" type="button">Play</button>
+    <button id="reset-btn" class="btn btn-primary btn-lg" type="button">Reset</button>
+    </div>
     <div style="display: flex; width: 100%; align-items: center; justify-content: space-between;">
       <div style="width: 100%; height: 120vh;" id="dataset-chart"></div>
-      <div style="display: flex; flex-direction: column;">
-        <strong>Solution</strong>
+      <div style="display: flex; flex-direction: column; align-items: center; justify-content: center;">
         <div>
         <video id="result-video" width="300" muted> 
         <source src="/static/results_{{ dataset }}.m4v" type='video/mp4'>
         </video>
         </div>
-        <p></p>
-
-        <strong style="margin-top: 5%">Ground Truth</strong>
+        <div>
+        <p style="color: darkred;" id="result-info">SLTN Average CCR: 0CPM, Detected: 0</p>   
+        <p style="color: black;" id="time-info">Time: 0s</p>     
+        <p style="color: blue;" id="gt-info">GT Average CCR: 0CPM, Detected: 0</p>
+        </div>
         <div>
         <video id="gt-video" width="300" muted>
         <source src="/static/gt_{{ dataset }}.m4v" type='video/mp4'>
@@ -46,6 +53,7 @@ RSLT_DOT_COLOR = 'red'
 DOT_SIZE = 10
 SEEK_COLOR = 'yellow';
 
+isPlaying = false;
 fps = {{ fps }};
 groundTruthData = JSON.parse({{ gt_data|tojson }});
 resultsData = JSON.parse({{ results_data|tojson }});
@@ -55,6 +63,7 @@ groundTruthCompressions = groundTruthCCRData.filter(d => d !== null)
 groundTruthCCRAvg = Math.round(groundTruthCompressions.reduce((total, elem) => total + elem) / groundTruthCompressions.length);
 resultsCompressions = resultsCCRData.filter(d => d !== null)
 resultsCCRAvg = Math.round(resultsCompressions.reduce((total, elem) => total + elem) / resultsCompressions.length);
+
 
 opticalFlow = {
   x: resultsData.map((d, i) => i/fps),
@@ -140,7 +149,7 @@ data = [groundTruthCCR, resultsCCR, opticalFlow, detectedCompressions, groundTru
 layout = {
   xaxis: { title: 'Time (seconds)' },
   yaxis: { title: 'Vertical Acceleration (pixels/s^2)' },
-  yaxis2: { title: 'Frame Y Co-ords (pixels)' },
+  yaxis2: { title: 'Centre of Ball Y Co-ords (pixels)' },
   yaxis3: { title: 'Compressions/min' },
   grid: {
     rows: 3,
@@ -188,8 +197,25 @@ layout = {
 };
 
 Plotly.newPlot('dataset-chart', data, layout);
+resultVideo = document.getElementById("result-video");
+groundTruthVideo = document.getElementById("gt-video");
 
 chart = document.getElementById('dataset-chart');
+
+ccrAtTime = (time) => {
+  frame = Math.ceil(time * fps);
+  resultsSlice = resultsCCRData.slice(0, frame - 1);
+  groundTruthSlice = groundTruthCCRData.slice(0, frame - 1);
+  resultsCompressionsAtTime = resultsSlice.filter(d => d !== null);
+  groundTruthCompressionsAtTime = groundTruthSlice.filter(d => d !== null);
+  resultsCCRAvgAtTime = Math.floor(resultsCompressionsAtTime.reduce((total, elem) => total + elem) / resultsCompressionsAtTime.length);
+  groundTruthCCRAvgAtTime = Math.round(groundTruthCompressionsAtTime.reduce((total, elem) => total + elem) / groundTruthCompressionsAtTime.length);
+
+  $("#result-info").text("SLTN Average CCR: " + resultsCCRAvgAtTime + ", Detected: " + (resultsCompressionsAtTime.length + 1))
+  $("#gt-info").text("GT Average CCR: " + groundTruthCCRAvgAtTime + ", Nc: " + (groundTruthCompressionsAtTime.length + 1))
+  $("#time-info").text("Time: " + time + "s")
+};
+
 chart.on('plotly_hover', (data) => {
   console.log(data);
   x = data.points[0].x
@@ -197,13 +223,56 @@ chart.on('plotly_hover', (data) => {
     {'type': 'line', 'x0': x, 'y0': -75000, 'x1': x, 'y1': 75000, 'xref': 'x', 'yref': 'y1', line: { color: SEEK_COLOR, width: 3 }},
     {'type': 'line', 'x0': x, 'y0': -75000, 'x1': x, 'y1': 75000, 'xref': 'x', 'yref': 'y2', line: { color: SEEK_COLOR, width: 3 }},
     {'type': 'line', 'x0': x, 'y0': -75000, 'x1': x, 'y1': 75000, 'xref': 'x', 'yref': 'y3', line: { color: SEEK_COLOR, width: 3 }}
-  ]
+  ];
   Plotly.update(chart, {}, { shapes });
-  resultVideo = document.getElementById("result-video");
-  groundTruthVideo = document.getElementById("gt-video");
   resultVideo.currentTime = x;
   groundTruthVideo.currentTime = x;
+  ccrAtTime(x);
 });
+
+$('#stop-play-btn').on('click', (event) => {
+  isPlaying = !isPlaying;
+  if (isPlaying) {
+    $(event.target).text("Pause");
+    resultVideo.play();
+    groundTruthVideo.play();
+  } else {
+    $(event.target).text("Play");
+    resultVideo.pause();
+    groundTruthVideo.pause();
+    Plotly.update(chart, {}, { hovermode: 'x' });
+  }
+});
+
+$('#reset-btn').on('click', (event) => {
+    x = 0;
+    resultVideo.currentTime = 0;
+    groundTruthVideo.currentTime = 0;
+    shapes = [
+      {'type': 'line', 'x0': x, 'y0': -75000, 'x1': x, 'y1': 75000, 'xref': 'x', 'yref': 'y1', line: { color: SEEK_COLOR, width: 3 }},
+      {'type': 'line', 'x0': x, 'y0': -75000, 'x1': x, 'y1': 75000, 'xref': 'x', 'yref': 'y2', line: { color: SEEK_COLOR, width: 3 }},
+      {'type': 'line', 'x0': x, 'y0': -75000, 'x1': x, 'y1': 75000, 'xref': 'x', 'yref': 'y3', line: { color: SEEK_COLOR, width: 3 }}
+    ];
+    $("#result-info").text("SLTN Average CCR: 0CPM, Detected: 0");
+    $("#gt-info").text("GT Average CCR: 0CPM, N: 0");
+    $("#time-info").text("Time: 0s")
+    Plotly.update(chart, {}, { shapes, });
+});
+
+moveSeek = () => {
+  if (isPlaying) {
+    x = resultVideo.currentTime;
+    ccrAtTime(x);
+    shapes = [
+      {'type': 'line', 'x0': x, 'y0': -75000, 'x1': x, 'y1': 75000, 'xref': 'x', 'yref': 'y1', line: { color: SEEK_COLOR, width: 3 }},
+      {'type': 'line', 'x0': x, 'y0': -75000, 'x1': x, 'y1': 75000, 'xref': 'x', 'yref': 'y2', line: { color: SEEK_COLOR, width: 3 }},
+      {'type': 'line', 'x0': x, 'y0': -75000, 'x1': x, 'y1': 75000, 'xref': 'x', 'yref': 'y3', line: { color: SEEK_COLOR, width: 3 }}
+    ];
+    Plotly.update(chart, {}, { shapes, hovermode: false });
+  }
+};
+
+window.setInterval(moveSeek, 10);
 
 </script>
 </body>
