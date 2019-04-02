@@ -52,5 +52,9 @@ def index():
 
 	return render_template('./index.html', gt_data=json.dumps(gt_data), results_data=json.dumps(results_data), gt_ccr=json.dumps(gt_ccr), results_ccr=json.dumps(results_ccr), fps=FPS, dataset=dataset_name.capitalize())
 
+@server.route("/assets/<file_name>", methods=["GET"])
+def get_file(file_name):
+	return server.send_static_file('./assets/%s' % file_name)
+
 if __name__ == "__main__":
     server.run(debug=True, port=PORT)
