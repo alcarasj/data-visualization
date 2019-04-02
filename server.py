@@ -59,9 +59,6 @@ def index():
 						   fps=FPS,
 						   dataset=dataset_name.capitalize())
 
-@server.route("/static/<file_name>", methods=["GET"])
-def get_file(file_name):
-	return server.send_static_file('./static/%s' % file_name)
 
 if __name__ == "__main__":
     server.run(port=PORT)
